@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证码登录测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .login-form {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .captcha-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .captcha-image {
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+        .login-btn {
+            width: 100%;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .login-btn:hover {
+            background: #218838;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-form">
+        <h2>管理员登录</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名:</label>
+                <input type="text" id="username" name="username" required value="admin">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密码:</label>
+                <input type="password" id="password" name="password" required value="123456">
+            </div>
+            
+            <div class="form-group">
+                <label>验证码:</label>
+                <div class="captcha-container">
+                    <img id="captchaImage" class="captcha-image" alt="验证码">
+                    <button type="button" class="refresh-btn" onclick="getCaptcha()">刷新</button>
+                    <input type="hidden" id="captchaUuid" name="captchaUuid">
+                </div>
+                <input type="text" id="captchaCode" name="captchaCode" placeholder="请输入验证码" required>
+            </div>
+            
+            <button type="submit" class="login-btn">登录</button>
+        </form>
+        
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script>
+        // 页面加载时获取验证码
+        window.onload = function() {
+            getCaptcha();
+        };
+
+        // 获取验证码
+        function getCaptcha() {
+            fetch('/api/captcha/image')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        document.getElementById('captchaImage').src = data.data.image;
+                        document.getElementById('captchaUuid').value = data.data.uuid;
+                        document.getElementById('captchaCode').value = '';
+                    } else {
+                        showMessage('获取验证码失败: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showMessage('网络错误: ' + error.message, 'error');
+                });
+        }
+
+        // 表单提交
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                captchaUuid: document.getElementById('captchaUuid').value,
+                captchaCode: document.getElementById('captchaCode').value
+            };
+
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    showMessage('登录成功! Access Token: ' + data.data.accessToken.substring(0, 20) + '...', 'success');
+                    // 登录成功后刷新验证码
+                    getCaptcha();
+                } else {
+                    showMessage('登录失败: ' + data.message, 'error');
+                    // 登录失败后刷新验证码
+                    getCaptcha();
+                }
+            })
+            .catch(error => {
+                showMessage('网络错误: ' + error.message, 'error');
+                getCaptcha();
+            });
+        });
+
+        // 显示消息
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

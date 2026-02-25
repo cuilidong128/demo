@@ -9,7 +9,7 @@ public class HelloController {
     // 测试
 
 
-    
+
     @GetMapping("/hello")
     public String hello() {
         return "Hello, World!";
