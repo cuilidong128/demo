@@ -1,3 +1,48 @@
+.idea/
+/idea/
+*.iml
+*.map
+*.ipr
+*.iws
+
+# eclipse
+.settings/
+.classpath
+.project
+
+# vscode
+.vscode/
+
+# mvn
+.mvn/
+
+# maven
 target/
+build/
+
+# temp file
 *.log
-*.jar
+*.cache
+*.diff
+*.patch
+*.tmp
+
+# system ignore
+.DS_Store
+Thumbs.db
+
+# nodejs
+node_modules/
+package-lock.json
+
+# others
+logs/
+loghub-config.properties
+GaeaConfigCenter_*
+loghub-config*
+hs_err_pid*
+ConfigCenter*
+.flattened-pom.xml
+
+# AI development rules (do not commit)
+rules.md
